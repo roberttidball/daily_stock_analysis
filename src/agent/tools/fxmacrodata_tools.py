@@ -83,3 +83,9 @@ def build_fxmacrodata_tools(client: FXMacroDataClient | None = None) -> list[FXM
         definition.input_schema = deepcopy(operation.input_schema)
         result.append(definition)
     return result
+
+
+# Like the host's other tool modules, publish stable definitions for registry
+# rebuilds. These handlers obtain a client and optional authorization only when
+# invoked; importing this module makes no network requests and reads no key.
+ALL_FXMACRODATA_TOOLS = build_fxmacrodata_tools()
