@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 
 from fxmacrodata_public import Result, list_operations
+from src.agent.tools import fxmacrodata_tools
 from src.agent.tools.fxmacrodata_tools import build_fxmacrodata_tools, fxmacrodata_tool_names
 from src.agent.tools.registry import ToolRegistry
 
@@ -39,6 +40,39 @@ def test_transport_failures_do_not_enter_report_logs():
     response = build_fxmacrodata_tools(FailingClient())[0].handler()
     assert response["status"] == "unavailable"
     assert "transport detail" not in json.dumps(response)
+
+
+def test_client_construction_failures_degrade_to_unavailable(monkeypatch):
+    class UnconstructableClient:
+        def __init__(self, **kwargs):
+            raise RuntimeError("construction detail must not appear")
+
+    monkeypatch.setattr(fxmacrodata_tools, "FXMacroDataClient", UnconstructableClient)
+    response = build_fxmacrodata_tools()[0].handler()
+    assert response["status"] == "unavailable"
+    assert response["records"] == []
+    assert "construction detail" not in json.dumps(response)
+
+
+def test_owned_client_is_closed_after_execute_failure(monkeypatch):
+    closed = []
+
+    class OwnedFailingClient:
+        def __init__(self, **kwargs):
+            assert kwargs["api_key"] == ""
+
+        def execute(self, *args):
+            raise RuntimeError("transport detail must not appear")
+
+        def close(self):
+            closed.append(True)
+
+    monkeypatch.delenv("FXMACRODATA_API_KEY", raising=False)
+    monkeypatch.setattr(fxmacrodata_tools, "FXMacroDataClient", OwnedFailingClient)
+    response = build_fxmacrodata_tools()[0].handler()
+    assert response["status"] == "unavailable"
+    assert "transport detail" not in json.dumps(response)
+    assert closed == [True]
 
 
 def test_factory_registers_tools_for_report_and_chat():

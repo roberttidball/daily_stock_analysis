@@ -36,10 +36,10 @@ def build_fxmacrodata_tools(client: FXMacroDataClient | None = None) -> list[FXM
     """
     def make_handler(operation_name):
         def handler(**arguments):
-            provider = client or FXMacroDataClient(
-                api_key=os.environ.get("FXMACRODATA_API_KEY") or "", timeout=30
-            )
+            provider = client
             try:
+                if provider is None:
+                    provider = FXMacroDataClient(api_key=os.environ.get("FXMACRODATA_API_KEY") or "", timeout=30)
                 response = provider.execute(operation_name, arguments).as_dict()
                 response["provider_url"] = (
                     "https://fxmacrodata.com/?utm_source=daily_stock_analysis"
@@ -47,12 +47,13 @@ def build_fxmacrodata_tools(client: FXMacroDataClient | None = None) -> list[FXM
                 )
                 return response
             except Exception:
-                # DSA logs propagated exceptions; never propagate a transport
-                # exception or a request which could contain a credential.
+                # DSA logs propagated exceptions; never propagate a client
+                # construction or transport exception, or a request which
+                # could contain a credential.
                 return {"operation": operation_name, "status": "unavailable", "records": [],
                         "error": "FXMacroData could not complete this request."}
             finally:
-                if client is None:
+                if client is None and provider is not None:
                     provider.close()
 
         return handler

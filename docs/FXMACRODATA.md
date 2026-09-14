@@ -2,7 +2,7 @@
 
 股票分析与聊天 Agent 的工具注册表已接入 FXMacroData。USD 数据目录、最近 90 天的指标历史与发布日历可免费使用，无需密钥、账户或信用卡。
 
-如需可选的授权数据，在运行应用的环境中配置 `FXMACRODATA_API_KEY`。密钥不会进入工具参数、模型上下文或响应。启用 Agent 模式后，可查询 `fxmacrodata_data_catalogue`（`currency=USD`）、`fxmacrodata_indicator_history`（`currency=USD, indicator=policy_rate`）及 `fxmacrodata_release_calendar`。
+如需可选的授权数据，在运行应用的环境中配置 `FXMACRODATA_API_KEY`；使用 GitHub Actions 定时分析时，将其保存为仓库 Secret `FXMACRODATA_API_KEY`，`00-daily-analysis.yml` 会把它映射到分析步骤环境。密钥不会进入工具参数、模型上下文或响应。启用 Agent 模式后，可查询 `fxmacrodata_data_catalogue`（`currency=USD`）、`fxmacrodata_indicator_history`（`currency=USD, indicator=policy_rate`）及 `fxmacrodata_release_calendar`。
 
 多 Agent 模式下，情报 Agent 的原生工具允许列表提供全部 72 个操作；风险和组合 Agent 提供与发布、宏观及跨市场风险相关的操作。各专业 Agent 仍遵守原有的工具访问限制。
 
